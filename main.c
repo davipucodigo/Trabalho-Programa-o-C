@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int op;
 // Struct De coleta
@@ -26,49 +27,51 @@ struct pessoa fulano;
 void Cadastrar() {
     printf("\nCadastrar\n");
     printf("\nNome:");
-    gets(fulano.nome);
+    fgets(fulano.nome,50,stdin);
+
     printf("Idade:");
-    fflush(stdin);
     scanf("%d",&fulano.idade);
+    fflush(stdin);
+
     printf("Email:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.email);
+    fgets(fulano.email,50,stdin);
+    
     printf("Telefone:");
-    fflush(stdin);
     scanf("%d",&fulano.fone);
+    fflush(stdin);
+    
     printf("Time:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.time);
+    fgets(fulano.time,50,stdin);
+    
     printf("Equipe:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.equipe);
+    fgets(fulano.equipe,50,stdin);
+    
     printf("Esporte:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.esportes);
+    fgets(fulano.esportes,50,stdin);
+
     printf("Profissão:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.profissao);
+    fgets(fulano.profissao,50,stdin);
+    
     printf("Cidade:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.cidade);
+    fgets(fulano.cidade,50,stdin);
+
     printf("Musica:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.musica);
+    fgets(fulano.musica,50,stdin);
+    
     printf("Livro:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.livro);
+    fgets(fulano.livro,50,stdin);
+    
     printf("Filme:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.filme);
+    fgets(fulano.filme,50,stdin); 
+
     printf("Comida:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.comida);
+    fgets(fulano.comida,50,stdin);
+
     printf("Hobbie:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.hobbie);
+    fgets(fulano.hobbie,50,stdin);
+
     printf("Personalidade:");
-    fflush(stdin);
-    scanf("%[^\n]s",fulano.personalidade);
+    fgets(fulano.personalidade,50,stdin);
     
 }
 
