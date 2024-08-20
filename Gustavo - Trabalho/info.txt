@@ -1,0 +1,7 @@
+
+GUSTAVO TRABALHO
+
+verificações
+[] - Cadastrar
+[] - Pesquisar
+[] - Afinidade
