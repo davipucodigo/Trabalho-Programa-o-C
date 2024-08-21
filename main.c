@@ -173,28 +173,40 @@ void pesquisarPessoa() {
 
 void calcularAfinidade() {
     FILE *file = fopen("tabela_afinidade.txt", "wb");
+    FILE *file2 = fopen("tabela_afinidade.txt", "wb");
+
     if (file == NULL) {
         printf("Não foi possível abrir o arquivo para escrita.\n");
         return;
     }
     // cálculo de afinidade
     int afinidade = 0;
-    while (fread(&pessoas, sizeof(Pessoa), 1, file)) {
-        if (strcmp(pessoas.time           ,   pessoas.time) == 0) afinidade++;
-        if (strcmp(pessoas.equipe         ,   pessoas.equipe) == 0) afinidade++;
-        if (strcmp(pessoas.esporte        ,   pessoas.esporte) == 0) afinidade++;
-        if (strcmp(pessoas.profissao      ,   pessoas.profissao) == 0) afinidade++;
-        if (strcmp(pessoas.cidade         ,   pessoas.cidade) == 0) afinidade++;
-        if (strcmp(pessoas.nacionalidade  ,   pessoas.nacionalidade) == 0) afinidade++;
-        if (strcmp(pessoas.hobby          ,   pessoas.hobby) == 0) afinidade++;
-        if (strcmp(pessoas.musicaFavorita ,   pessoas.musicaFavorita) == 0) afinidade++;
-        if (strcmp(pessoas.livroFavorito  ,   pessoas.livroFavorito) == 0) afinidade++;
-        if (strcmp(pessoas.filmeFavorito  ,   pessoas.filmeFavorito) == 0) afinidade++;
-        
-        fprintf(file, "Afinidade entre %s e %s: %d\n", pessoas[i].nome, pessoas[j].nome, afinidade);
+
+    Pessoa compara;
+
+    for (int i = 0; i < totalPessoas; i++) {
+        fread(&compara, sizeof(compara), 1, file2);
+
+        for (int j = 0; j < totalPessoas; j++) {
+            fread(&pessoas, sizeof(pessoas), 1, file);
+
+            if (strcmp(compara.time           ,   pessoas.time) == 0) afinidade+=1;
+            if (strcmp(compara.equipe         ,   pessoas.equipe) == 0) afinidade+=2;
+            if (strcmp(compara.esporte        ,   pessoas.esporte) == 0) afinidade+=1;
+            if (strcmp(compara.profissao      ,   pessoas.profissao) == 0) afinidade+=4;
+            if (strcmp(compara.cidade         ,   pessoas.cidade) == 0) afinidade+=7;
+            if (strcmp(compara.nacionalidade  ,   pessoas.nacionalidade) == 0) afinidade+=9;
+            if (strcmp(compara.hobby          ,   pessoas.hobby) == 0) afinidade+=5;
+            if (strcmp(compara.musicaFavorita ,   pessoas.musicaFavorita) == 0) afinidade+=8;
+            if (strcmp(compara.livroFavorito  ,   pessoas.livroFavorito) == 0) afinidade+=8;
+            if (strcmp(compara.filmeFavorito  ,   pessoas.filmeFavorito) == 0) afinidade+=3;
+            
+            fprintf(file, "Afinidade entre %s e %s: %d\n", pessoas.nome, pessoas.nome, afinidade);
+        }
     }
     
     fclose(file);
+    fclose(file2);
     printf("Tabela de afinidade gerada com sucesso.\n");
 }
 
@@ -211,6 +223,7 @@ void menu() {
         printf("Escolha uma opção: ");
         scanf("%d", &opcao);
         getchar();// Sem isso fica um \n pra atrapalhar.
+
         system("cls");
         system("clear");
         switch (opcao) {
@@ -222,7 +235,7 @@ void menu() {
                 pesquisarPessoa();
                 break;
             case 3:
-                //calcularAfinidade();
+                calcularAfinidade();
                 break;
             case 4:
                 printf("Saindo...\n");
