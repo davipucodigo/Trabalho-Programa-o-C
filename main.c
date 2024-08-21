@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_PESSOAS 100
 #define MAX_STRING 100
 
 // Estrutura para armazenar informações de uma pessoa
@@ -24,16 +23,12 @@ typedef struct {
 } Pessoa;
 
 // Array para armazenar as pessoas cadastradas
-Pessoa pessoas[MAX_PESSOAS];
+Pessoa pessoas;
 int totalPessoas = 0; // Contagem de cadastrados
 
 // Função para cadastrar uma nova pessoa
 void cadastrarPessoa() {
-    if (totalPessoas >= MAX_PESSOAS) { //Enquanto limite n atingido
-        printf("Limite de pessoas atingido.\n");
-        return; 
-    }
-    
+
     Pessoa p;// cria uma struct temporaria para salvar os dados
     printf("Digite o nome: ");
     fgets(p.nome, MAX_STRING, stdin);
@@ -91,32 +86,8 @@ void cadastrarPessoa() {
     fgets(p.filmeFavorito, MAX_STRING, stdin);
     strtok(p.filmeFavorito, "\n");
     
-    pessoas[totalPessoas++] = p;// Registra e parte pro próximo
+    pessoas = p; // Repassa p(struct temporaria) para pessoas (struct principal)
     printf("Pessoa cadastrada com sucesso.\n");
-}
-
-// Função para salvar os dados em um arquivo
-void salvarDados() {
-    FILE *file = fopen("dados_pessoas.txt", "wb");
-    if (file == NULL) {
-        printf("Não foi possível abrir o arquivo para escrita.\n");
-        return;
-    }
-    fwrite(&totalPessoas, sizeof(int), 1, file); 
-    fwrite(pessoas, sizeof(Pessoa), totalPessoas, file); // Escreve a struct lá no arquivo
-    fclose(file);
-}
-
-// Função para carregar os dados de um arquivo
-void carregarDados() {
-    FILE *file = fopen("dados_pessoas.txt", "rb");
-    if (file == NULL) {
-        printf("Não foi possível abrir o arquivo para leitura.\n");
-        return;
-    }
-    fread(&totalPessoas, sizeof(int), 1, file);
-    fread(pessoas, sizeof(Pessoa), totalPessoas, file);
-    fclose(file);
 }
 
 // Função para exibir uma pessoa
@@ -137,59 +108,90 @@ void exibirPessoa(Pessoa p) {
     printf("Filme Favorito: %s\n", p.filmeFavorito);
 }
 
+// Função para salvar os dados em um arquivo
+void salvarDados() {
+    FILE *file = fopen("dados_pessoas.txt", "ab");
+    if (file == NULL) {
+        printf("Não foi possível abrir o arquivo para escrita.\n");
+        return;
+    }
+    fwrite(&pessoas, sizeof(Pessoa), 1, file); // Escreve a struct lá no arquivo
+    fclose(file);
+}
+
+// Função para atualizar numero de pessoas
+void carregarTotal() {
+    FILE *file = fopen("dados_pessoas.txt", "rb");
+    if (file == NULL) {
+        printf("Não foi possível abrir o arquivo para leitura.\n");
+        return;
+    }
+    while (fread(&pessoas, sizeof(Pessoa), 1, file)) {
+        totalPessoas++;
+    }
+    
+    fclose(file); 
+}
+
 // Função para pesquisar pessoas por um elemento
 void pesquisarPessoa() {
+    
+    FILE *file = fopen("dados_pessoas.txt", "rb");
+    if (file == NULL) {
+        printf("Não foi possível abrir o arquivo para leitura.\n");
+        return;
+    }
     char pesquisa[MAX_STRING];
     printf("Digite o valor para pesquisa: ");
     fgets(pesquisa, MAX_STRING, stdin);
     strtok(pesquisa, "\n");
-    
-    for (int i = 0; i < totalPessoas; i++) {
-        if (strstr(pessoas[i].nome, pesquisa) != NULL ||
-            strstr(pessoas[i].email, pesquisa) != NULL ||
-            strstr(pessoas[i].telefone, pesquisa) != NULL ||
-            strstr(pessoas[i].time, pesquisa) != NULL ||
-            strstr(pessoas[i].equipe, pesquisa) != NULL ||
-            strstr(pessoas[i].esporte, pesquisa) != NULL ||
-            strstr(pessoas[i].profissao, pesquisa) != NULL ||
-            strstr(pessoas[i].cidade, pesquisa) != NULL ||
-            strstr(pessoas[i].nacionalidade, pesquisa) != NULL ||
-            strstr(pessoas[i].hobby, pesquisa) != NULL ||
-            strstr(pessoas[i].musicaFavorita, pesquisa) != NULL ||
-            strstr(pessoas[i].livroFavorito, pesquisa) != NULL ||
-            strstr(pessoas[i].filmeFavorito, pesquisa) != NULL) {
-            exibirPessoa(pessoas[i]);
+
+    while (fread(&pessoas, sizeof(Pessoa), 1, file)) {
+
+        if (strstr(pessoas.nome, pesquisa) != NULL ||
+            strstr(pessoas.email, pesquisa) != NULL ||
+            strstr(pessoas.telefone, pesquisa) != NULL ||
+            strstr(pessoas.time, pesquisa) != NULL ||
+            strstr(pessoas.equipe, pesquisa) != NULL ||
+            strstr(pessoas.esporte, pesquisa) != NULL ||
+            strstr(pessoas.profissao, pesquisa) != NULL ||
+            strstr(pessoas.cidade, pesquisa) != NULL ||
+            strstr(pessoas.nacionalidade, pesquisa) != NULL ||
+            strstr(pessoas.hobby, pesquisa) != NULL ||
+            strstr(pessoas.musicaFavorita, pesquisa) != NULL ||
+            strstr(pessoas.livroFavorito, pesquisa) != NULL ||
+            strstr(pessoas.filmeFavorito, pesquisa) != NULL) {
+            exibirPessoa(pessoas);
             printf("\n");
             // strstr util para procurar substring em strings exelente para pesquisa.
         }
     }
+    fclose(file);     
 }
 
 // Função para calcular afinidade
+
 void calcularAfinidade() {
     FILE *file = fopen("tabela_afinidade.txt", "wb");
     if (file == NULL) {
         printf("Não foi possível abrir o arquivo para escrita.\n");
         return;
     }
-    
-    for (int i = 0; i < totalPessoas; i++) {
-        for (int j = i + 1; j < totalPessoas; j++) {
-            // cálculo de afinidade
-            int afinidade = 0;
-            if (strcmp(pessoas[i].time, pessoas[j].time) == 0) afinidade++;
-            if (strcmp(pessoas[i].equipe, pessoas[j].equipe) == 0) afinidade++;
-            if (strcmp(pessoas[i].esporte, pessoas[j].esporte) == 0) afinidade++;
-            if (strcmp(pessoas[i].profissao, pessoas[j].profissao) == 0) afinidade++;
-            if (strcmp(pessoas[i].cidade, pessoas[j].cidade) == 0) afinidade++;
-            if (strcmp(pessoas[i].nacionalidade, pessoas[j].nacionalidade) == 0) afinidade++;
-            if (strcmp(pessoas[i].hobby, pessoas[j].hobby) == 0) afinidade++;
-            if (strcmp(pessoas[i].musicaFavorita, pessoas[j].musicaFavorita) == 0) afinidade++;
-            if (strcmp(pessoas[i].livroFavorito, pessoas[j].livroFavorito) == 0) afinidade++;
-            if (strcmp(pessoas[i].filmeFavorito, pessoas[j].filmeFavorito) == 0) afinidade++;
-            
-            fprintf(file, "Afinidade entre %s e %s: %d\n", pessoas[i].nome, pessoas[j].nome, afinidade);
-        }
+    // cálculo de afinidade
+    int afinidade = 0;
+    while (fread(&pessoas, sizeof(Pessoa), 1, file)) {
+        if (strcmp(pessoas.time           ,   pessoas.time) == 0) afinidade++;
+        if (strcmp(pessoas.equipe         ,   pessoas.equipe) == 0) afinidade++;
+        if (strcmp(pessoas.esporte        ,   pessoas.esporte) == 0) afinidade++;
+        if (strcmp(pessoas.profissao      ,   pessoas.profissao) == 0) afinidade++;
+        if (strcmp(pessoas.cidade         ,   pessoas.cidade) == 0) afinidade++;
+        if (strcmp(pessoas.nacionalidade  ,   pessoas.nacionalidade) == 0) afinidade++;
+        if (strcmp(pessoas.hobby          ,   pessoas.hobby) == 0) afinidade++;
+        if (strcmp(pessoas.musicaFavorita ,   pessoas.musicaFavorita) == 0) afinidade++;
+        if (strcmp(pessoas.livroFavorito  ,   pessoas.livroFavorito) == 0) afinidade++;
+        if (strcmp(pessoas.filmeFavorito  ,   pessoas.filmeFavorito) == 0) afinidade++;
+        
+        fprintf(file, "Afinidade entre %s e %s: %d\n", pessoas[i].nome, pessoas[j].nome, afinidade);
     }
     
     fclose(file);
@@ -202,14 +204,15 @@ void menu() {
     
     while (1) {
         printf("Menu:\n");
-        printf("1. Cadastrar Pessoa\n");
+        printf("1. Cadastrar Pessoa | Total Cad.: %d \n", totalPessoas);
         printf("2. Pesquisar Pessoa\n");
         printf("3. Calcular Afinidade\n");
         printf("4. Sair\n");
         printf("Escolha uma opção: ");
         scanf("%d", &opcao);
-        getchar();  // Limpar o caractere de nova linha
-
+        getchar();// Sem isso fica um \n pra atrapalhar.
+        system("cls");
+        system("clear");
         switch (opcao) {
             case 1:
                 cadastrarPessoa();
@@ -219,7 +222,7 @@ void menu() {
                 pesquisarPessoa();
                 break;
             case 3:
-                calcularAfinidade();
+                //calcularAfinidade();
                 break;
             case 4:
                 printf("Saindo...\n");
@@ -232,7 +235,7 @@ void menu() {
 
 // Função principal
 int main() {
-    carregarDados();
+    carregarTotal();
     menu();
     return 0;
 }
