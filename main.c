@@ -181,11 +181,9 @@ void calcularAfinidade() {
 
     Pessoa compara;
 
-    for (int i = 0; i < totalPessoas; i++) {
-        fread(&compara, sizeof(compara), 1, file2);
+    while (fread(&compara, sizeof(compara), 1, file2)) {
 
-        for (int j = 0; j < totalPessoas; j++) {
-            fread(&pessoas, sizeof(pessoas), 1, file);
+        while (fread(&pessoas, sizeof(pessoas), 1, file)) {
 
             if (strcmp(compara.time           ,   pessoas.time) == 0) afinidade+=1;
             if (strcmp(compara.equipe         ,   pessoas.equipe) == 0) afinidade+=2;
@@ -199,9 +197,10 @@ void calcularAfinidade() {
             if (strcmp(compara.filmeFavorito  ,   pessoas.filmeFavorito) == 0) afinidade+=3;
             
             fprintf(file, "Afinidade entre %s e %s: %d\n", pessoas.nome, pessoas.nome, afinidade);
+            
+            rewind(file);
         }
     }
-    
     fclose(file);
     fclose(file2);
     printf("Tabela de afinidade gerada com sucesso.\n");
