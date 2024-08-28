@@ -4,7 +4,6 @@
 
 #define MAX_STRING 100
 
-// Estrutura para armazenar informações de uma pessoa
 typedef struct {
     char nome[MAX_STRING];
     char dataNascimento[MAX_STRING];
@@ -22,11 +21,9 @@ typedef struct {
     char filmeFavorito[MAX_STRING];
 } Pessoa;
 
-// Array para armazenar as pessoas cadastradas
 Pessoa pessoas;
 int totalPessoas = 0; // Contagem de cadastrados
 
-// Função para cadastrar uma nova pessoa
 void cadastrarPessoa() {
 
     Pessoa p;// cria uma struct temporaria para salvar os dados
@@ -88,9 +85,11 @@ void cadastrarPessoa() {
     
     pessoas = p; // Repassa p(struct temporaria) para pessoas (struct principal)
     printf("Pessoa cadastrada com sucesso.\n");
+
+    
+    totalPessoas++;
 }
 
-// Função para exibir uma pessoa
 void exibirPessoa(Pessoa p) {
     printf("Nome: %s\n", p.nome);
     printf("Data de Nascimento: %s\n", p.dataNascimento);
@@ -169,8 +168,6 @@ void pesquisarPessoa() {
     fclose(file);     
 }
 
-// Função para calcular afinidade
-
 void calcularAfinidade() {
     FILE *file = fopen("tabela_afinidade.txt", "wb");
     FILE *file2 = fopen("tabela_afinidade.txt", "wb");
@@ -210,7 +207,6 @@ void calcularAfinidade() {
     printf("Tabela de afinidade gerada com sucesso.\n");
 }
 
-// Função para exibir o menu
 void menu() {
     int opcao;
     
@@ -220,6 +216,7 @@ void menu() {
         printf("2. Pesquisar Pessoa\n");
         printf("3. Calcular Afinidade\n");
         printf("4. Sair\n");
+
         printf("Escolha uma opção: ");
         scanf("%d", &opcao);
         getchar();// Sem isso fica um \n pra atrapalhar.
@@ -227,10 +224,10 @@ void menu() {
         system("cls");
         system("clear");
         switch (opcao) {
-            case 1:
+                case 1:
                 cadastrarPessoa();
                 salvarDados();
-                break;
+                    break;
             case 2:
                 pesquisarPessoa();
                 break;
@@ -246,7 +243,7 @@ void menu() {
     }
 }
 
-// Função principal
+
 int main() {
     carregarTotal();
     menu();
