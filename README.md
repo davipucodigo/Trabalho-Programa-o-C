@@ -1,2 +1,2 @@
-# Trabalho-Programa-o-C
-Programa que registra e verifica a afinidade dos registrados.
+# Trabalho-Programa-em-C
+Programa manipulação de imagem, bitmap.
