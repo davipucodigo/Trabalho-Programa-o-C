@@ -29,10 +29,10 @@ typedef struct{
 } DIBHeader;
 
 typedef struct {
-    int32_t b;
-    int32_t g;
-    int32_t r;
-    int32_t reserved;
+    int8_t b;
+    int8_t g;
+    int8_t r;
+    int8_t reserved;
 } Cor;
 
 // ======================= Functions ======================= //
@@ -70,14 +70,13 @@ void LoadImage (char *File, FileHeader *F, DIBHeader *D, Cor *P) {
         printf("Color Table: %d\n", D->color_table);
         printf("Important Color Count: %d\n", D->important_color_coun);
 
-        
         fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET);
+        printf("\n------------------------> Pixels da Imagem\n");
 
-        printf("\n------------------------> Pixels\n");
-        for (int y = 0; y <= D->height; y++) {
-            for (int x = 0; x <= D->width; x++) {
+        for (int y = 0; y < D->height; y++) {
+            for (int x = 0; x < D->width; x++) {
                 fread(P, sizeof(Cor), 1, fp);
-                printf("Pixel[x: %d,y: %d] = R(%d) G(%d) B)(%d);\n",x,y,P->r,P->g,P->b);
+                printf("Pixel (%d, %d): R=%d G=%d B=%d\n", x, y, P->r, P->g, P->b);
             }
         }
 
