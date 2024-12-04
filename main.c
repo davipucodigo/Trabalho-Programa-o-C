@@ -6,7 +6,7 @@
 // ======================= Header BMP Structs ======================= //
 typedef struct { 
     char Signature[2]; // 2 bytes caracter hexadecimal ASCII "BM"
-    int32_t FileSize;  //Define o tamanho em Bytes da imagem
+    int32_t FileSize; 
     int16_t Reserved1;
     int16_t Reserved2;
     int32_t File_Offset_to_PixelArray;
@@ -32,65 +32,110 @@ typedef struct {
     int8_t b;
     int8_t g;
     int8_t r;
-    int8_t reserved;
 } Cor;
 
 // ======================= Functions ======================= //
 
-void LoadImage (char *File, FileHeader *F, DIBHeader *D, Cor *P) {
+void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     printf("\nCarregando Arquivo... '%s'\n", File);
 
     FILE * fp;
-    fp = fopen(File,"rb");
-        if (fp == NULL) {
-            printf("Não foi possível ler o arquivo.");
+    fp = fopen(File, "rb");
+    if (fp == NULL) {
+        printf("Não foi possível ler o arquivo.");
+        return;
+    }
+
+    fread(F, sizeof(FileHeader), 1, fp);
+    fread(D, sizeof(DIBHeader), 1, fp);
+
+    printf("\n------------------------> FILE HEADER\n");
+    printf("Signature: %c%c\n", F->Signature[0], F->Signature[1]);
+    printf("FileSize: %d\n", F->FileSize);
+    printf("Reserved1: %d\n", F->Reserved1);
+    printf("Reserved2: %d\n", F->Reserved2);
+    printf("File Offset to Pixel Array: %d\n", F->File_Offset_to_PixelArray);
+
+    printf("\n------------------------> DIB HEADER\n");
+    printf("DIB Header Size: %d\n", D->DIB_header_SIze);
+    printf("Width: %d\n", D->width);
+    printf("Height: %d\n", D->height);
+    printf("Planes: %d\n", D->planes);
+    printf("Bits per Pixel: %d\n", D->bits_per_pixel);
+    printf("Compression: %d\n", D->compression);
+    printf("Image Size: %d\n", D->image_size);
+    printf("X: %d\n", D->X);
+    printf("Y: %d\n", D->Y);
+    printf("Color Table: %d\n", D->color_table);
+    printf("Important Color Count: %d\n", D->important_color_coun);
+
+    // Pular para a área de pixels
+    fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET);  
+
+    printf("\n------------------------> Pixels da Imagem\n");
+
+    for (int y = 0; y < D->height; y++) {
+        for (int x = 0; x < D->width; x++) {
+            Cor *pixel = P + y * D->width + x;
+            fread(pixel, sizeof(Cor), 1, fp);
         }
-        fread(F, sizeof(FileHeader), 1, fp);
-        fread(D, sizeof(DIBHeader), 1, fp);
+    }
 
-        
-        printf("\n------------------------> FILE HEADER\n");
-        printf("Signature: %c%c\n", F->Signature[0], F->Signature[1]);
-        printf("FileSize: %d\n", F->FileSize);
-        printf("Reserved1: %d\n", F->Reserved1);
-        printf("Reserved2: %d\n", F->Reserved2);
-        printf("File Offset to Pixel Array: %d\n", F->File_Offset_to_PixelArray);
-
-
-        printf("\n------------------------> DIB HEADER\n");
-        printf("DIB Header Size: %d\n", D->DIB_header_SIze);
-        printf("Width: %d\n", D->width);
-        printf("Height: %d\n", D->height);
-        printf("Planes: %d\n", D->planes);
-        printf("Bits per Pixel: %d\n", D->bits_per_pixel);
-        printf("Compression: %d\n", D->compression);
-        printf("Image Size: %d\n", D->image_size);
-        printf("X: %d\n", D->X);
-        printf("Y: %d\n", D->Y);
-        printf("Color Table: %d\n", D->color_table);
-        printf("Important Color Count: %d\n", D->important_color_coun);
-
-        fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET);
-        printf("\n------------------------> Pixels da Imagem\n");
-
-        for (int y = 0; y < D->height; y++) {
-            for (int x = 0; x < D->width; x++) {
-                fread(P, sizeof(Cor), 1, fp);
-                printf("Pixel (%d, %d): R=%d G=%d B=%d\n", x, y, P->r, P->g, P->b);
-            }
-        }
-
-        printf("\nCarregamento Concluído. \n");
-
+    printf("\nCarregamento Concluído.\n");
     fclose(fp);
-
 }
 
-int main () {
+void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
+    FILE *fp = fopen("out_color.bmp", "wb");
+    if (fp == NULL) {
+        printf("Não foi possível criar o arquivo.\n");
+        return;
+    }
+
+    fwrite(F, sizeof(FileHeader), 1, fp);
+    fwrite(D, sizeof(DIBHeader), 1, fp);
+
+    // Escrever os pixels com modificação de cor
+    for (int y = 0; y < D->height; y++) {
+        for (int x = 0; x < D->width; x++) {
+            Cor *pixel = P + y * D->width + x;
+            // (P[b,g,e]) (P[b,g,e]) (P[b,g,e]) (P[b,g,e]) (P[b,g,e]) ... 1000 * 1000.
+            //      0          1          2          3          4
+            switch (out_color) {
+                case 0: // Any Color
+                    break;
+                case 1: // RED
+                    pixel->g = 0;
+                    pixel->b = 0;
+                    break;
+                case 2: // GREEN
+                    pixel->r = 0;
+                    pixel->b = 0;
+                    break;
+                case 3: // BLUE
+                    pixel->r = 0;
+                    pixel->g = 0;
+                    break;
+                case 4: // GRAY
+                    int8_t gray = (int8_t)(0.2989 * pixel->r + 0.5870 * pixel->g + 0.1140 * pixel->b);
+                    pixel->r = pixel->g = pixel->b = gray;
+                    break;
+                default:
+                    break;
+            }
+
+            fwrite(pixel, sizeof(Cor), 1, fp);
+        }
+    }
+
+    fclose(fp);
+}
+
+int main() {
     // Structs Extends
     FileHeader FileH;
     DIBHeader DIB;
-    Cor Pixel;
+    Cor Pixel[1000 * 1000];  // Numero de pixels limite
 
     // +++ Select File +++ //
     char file_name[100];
@@ -100,9 +145,14 @@ int main () {
     fflush(stdin);
 
     // +++ Load Image +++ //
-    LoadImage(file_name, &FileH, &DIB, &Pixel);
+    LoadImage(file_name, &FileH, &DIB, Pixel);
 
-
+    // +++ Save Image +++ //
+    int num_color;
+    printf("\nDigite o Numero da cor Any R G B G (0 1 2 3 4): ");
+    scanf("%d", &num_color);
+    fflush(stdin);
+    SaveImage(&FileH, &DIB, Pixel, num_color);  // Exemplo de modificação para cor verde
 
     return 0;
 }
