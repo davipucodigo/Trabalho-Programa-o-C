@@ -143,6 +143,8 @@ void SaveImage(char *File, FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
     fclose(fp);
 }
 
+
+
 int main() {
     //variables
     int loop = 1;
@@ -176,6 +178,12 @@ int main() {
                 scanf("%d",&cor);
                 fflush(stdin);
                 SaveImage(file_name, &FileH, &DIB, &Pixel, cor);
+                // Cor valores
+                // 1 -> Vermelho
+                // 2 -> Verde
+                // 3 -> Azul
+                // 4 -> Cinza
+
             break;
             case 2: //CutImage();
                 // em breve.
