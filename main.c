@@ -85,53 +85,10 @@ void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     fclose(fp);
 }
 
-void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
-    FILE *fp = fopen("out_color.bmp", "wb");
-    if (fp == NULL) {
-        printf("Não foi possível criar o arquivo.\n");
-        return;
-    }
-
-    fwrite(F, sizeof(FileHeader), 1, fp);
-    fwrite(D, sizeof(DIBHeader), 1, fp);
-
-    // Escrever os pixels com modificação de cor
-    for (int y = 0; y < D->height; y++) {
-        for (int x = 0; x < D->width; x++) {
-            Cor *pixel = P + y * D->width + x;
-            // (P[b,g,e]) (P[b,g,e]) (P[b,g,e]) (P[b,g,e]) (P[b,g,e]) ... 1000 * 1000.
-            //      0          1          2          3          4
-            switch (out_color) {
-                case 0: // Any Color
-                    break;
-                case 1: // RED
-                    pixel->g = 0;
-                    pixel->b = 0;
-                    break;
-                case 2: // GREEN
-                    pixel->r = 0;
-                    pixel->b = 0;
-                    break;
-                case 3: // BLUE
-                    pixel->r = 0;
-                    pixel->g = 0;
-                    break;
-                case 4: // GRAY
-                    int8_t gray = (int8_t)(0.2989 * pixel->r + 0.5870 * pixel->g + 0.1140 * pixel->b);
-                    pixel->r = pixel->g = pixel->b = gray;
-                    break;
-                default:
-                    break;
-            }
-
-            fwrite(pixel, sizeof(Cor), 1, fp);
-        }
-    }
-
-    fclose(fp);
-}
+void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {}
 
 int main() {
+    int num_color;
     // Structs Extends
     FileHeader FileH;
     DIBHeader DIB;
@@ -148,7 +105,6 @@ int main() {
     LoadImage(file_name, &FileH, &DIB, Pixel);
 
     // +++ Save Image +++ //
-    int num_color;
     printf("\nDigite o Numero da cor Any R G B G (0 1 2 3 4): ");
     scanf("%d", &num_color);
     fflush(stdin);
