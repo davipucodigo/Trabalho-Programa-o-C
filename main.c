@@ -241,7 +241,7 @@ int main() {
     // Decision
     while (loop) {
         int op;
-        printf("\n1)Cor\n2)Corte\n3)Sair\nDigite a decisão: ");
+        printf("\n1)Cor\n2)Corte\n3)Sair\n4)Recarregar\nDigite a decisão: ");
         scanf("%d",&op);
         fflush(stdin);
 
@@ -264,6 +264,9 @@ int main() {
             break;
             case 3:
                 loop = 0;
+            break;
+            case 4:
+                LoadImage(file_name, &FileH, &DIB, &Pixel);
             break;
         }
     } 
