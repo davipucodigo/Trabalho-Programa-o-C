@@ -77,7 +77,7 @@ void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     for (int y = 0; y < D->height; y++) {
         for (int x = 0; x < D->width; x++) {
             fread(P, sizeof(Cor), 1, fp);
-            printf("Linha %d, Pixel %d: R(%02X) G(%02X) B(%02X)\n", y, x, P->r, P->g, P->b);
+            printf("Pixel [%d,%d]: R(%02X) G(%02X) B(%02X)\n", x, y, P->r, P->g, P->b);
         }
         fseek(fp, padding, SEEK_CUR);
     }
@@ -143,6 +143,80 @@ void SaveImage(char *File, FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
     fclose(fp);
 }
 
+void CutImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
+    int cut_x, cut_y, L, A;
+
+    printf("\nDimensões: W(%d) H(%d)\n", D->width, D->height);
+    printf("\nDigite as coordenadas iniciais (x y): ");
+    scanf("%d %d", &cut_x, &cut_y);
+    fflush(stdin);
+
+    printf("Digite as dimensões do recorte a largura e a altura: ");
+    scanf("%d %d", &L, &A);
+    fflush(stdin);
+
+    if (cut_x < 0 || cut_y < 0 || cut_x + L > D->width || cut_y + A > D->height) {
+        printf("\nDimensões de recorte inválidas!\n");
+        return;
+    }
+
+    // Informar as structs descritivas do que será feito.
+    //                                                      (N° de pixels + paddings) * Altura) bytes
+    F->FileSize = sizeof(FileHeader) + sizeof(DIBHeader) + ((L * 3 + (4 - (L * 3) % 4) % 4) * A);
+    D->width = L;
+    D->height = A;
+    D->image_size = (L * 3 + (4 - (L * 3) % 4) % 4) * A;
+    //              (N° de pixels + paddings) * Altura) --> Dimensão da imagem em bytes
+
+    FILE *new_fp = fopen("out_image_cut.bmp", "wb");
+    if (new_fp == NULL) {
+        printf("\nErro ao criar o arquivo de corte!\n");
+        return;
+    }
+
+    fwrite(F, sizeof(FileHeader), 1, new_fp);
+    fwrite(D, sizeof(DIBHeader), 1, new_fp);
+
+    // leitura
+    FILE *orig_fp = fopen(File, "rb");
+    if (orig_fp == NULL) {
+        printf("\nErro ao abrir o arquivo original!\n");
+        fclose(new_fp);
+        return;
+    }
+
+    fseek(orig_fp, F->File_Offset_to_PixelArray, SEEK_SET);
+
+    // Saltar para o início da área de recorte no arquivo original
+    int original_padding = (4 - (D->width * 3) % 4) % 4;
+
+    for (int y = 0; y < cut_y; y++) {
+        fseek(orig_fp, D->width * 3 + original_padding, SEEK_CUR);
+    }
+
+    // Copiar os pixels da região de recorte para o novo arquivo
+    int new_padding = (4 - (L * 3) % 4) % 4;
+    for (int y = 0; y < A; y++) {
+        fseek(orig_fp, cut_x * 3, SEEK_CUR);
+
+        for (int x = 0; x < L; x++) {
+            fread(P, sizeof(Cor), 1, orig_fp);
+            fwrite(P, sizeof(Cor), 1, new_fp);
+        }
+
+        for (int p = 0; p < new_padding; p++) {
+            fputc(0, new_fp);
+        }
+
+        // Saltar o restante da linha original
+        fseek(orig_fp, (D->width - (cut_x + L)) * 3 + original_padding, SEEK_CUR);
+    }
+
+    fclose(orig_fp);
+    fclose(new_fp);
+
+    printf("\nRecorte concluído! Arquivo salvo como 'out_image_cut.bmp'.\n");
+}
 
 
 int main() {
@@ -186,7 +260,7 @@ int main() {
 
             break;
             case 2: //CutImage();
-                // em breve.
+                CutImage(file_name, &FileH, &DIB, &Pixel);
             break;
             case 3:
                 loop = 0;
