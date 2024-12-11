@@ -77,7 +77,7 @@ void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     for (int y = 0; y < D->height; y++) {
         for (int x = 0; x < D->width; x++) {
             fread(P, sizeof(Cor), 1, fp);
-            printf("Pixel [%d,%d]: R(%02X) G(%02X) B(%02X)\n", x, y, P->r, P->g, P->b);
+            //printf("Pixel [%d,%d]: R(%02X) G(%02X) B(%02X)\n", x, y, P->r, P->g, P->b);
         }
         fseek(fp, padding, SEEK_CUR);
     }
@@ -187,19 +187,15 @@ void CutImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
 
     fseek(orig_fp, F->File_Offset_to_PixelArray, SEEK_SET);
 
-    // Saltar para o início da área de recorte no arquivo original
     int original_padding = (4 - (D->width * 3) % 4) % 4;
+    int new_padding = (4 - (L * 3) % 4) % 4;
+
+    //  Posicionar o ponteiro do original para referencia.
+    int calculo_da_posição = (((D->width + original_padding) * cut_y) - cut_x);
+    fseek(orig_fp, calculo_da_posição, SEEK_CUR);
 
     for (int y = 0; y < cut_y; y++) {
-        fseek(orig_fp, D->width * 3 + original_padding, SEEK_CUR);
-    }
-
-    // Copiar os pixels da região de recorte para o novo arquivo
-    int new_padding = (4 - (L * 3) % 4) % 4;
-    for (int y = 0; y < A; y++) {
-        fseek(orig_fp, cut_x * 3, SEEK_CUR);
-
-        for (int x = 0; x < L; x++) {
+        for (int x = 0; x < cut_x; x++) {
             fread(P, sizeof(Cor), 1, orig_fp);
             fwrite(P, sizeof(Cor), 1, new_fp);
         }
@@ -208,8 +204,8 @@ void CutImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
             fputc(0, new_fp);
         }
 
-        // Saltar o restante da linha original
-        fseek(orig_fp, (D->width - (cut_x + L)) * 3 + original_padding, SEEK_CUR);
+        fseek(orig_fp, original_padding, SEEK_CUR); // --> Desloca padding.
+        fseek(orig_fp, (D->width - cut_x) , SEEK_CUR);
     }
 
     fclose(orig_fp);
@@ -241,7 +237,7 @@ int main() {
     // Decision
     while (loop) {
         int op;
-        printf("\n1)Cor\n2)Corte\n3)Sair\n4)Recarregar\nDigite a decisão: ");
+        printf("\n1)Cor\n2)Corte\n3)Recarregar\n4)Sair\nDigite a decisão: ");
         scanf("%d",&op);
         fflush(stdin);
 
@@ -263,10 +259,10 @@ int main() {
                 CutImage(file_name, &FileH, &DIB, &Pixel);
             break;
             case 3:
-                loop = 0;
+                LoadImage(file_name, &FileH, &DIB, &Pixel);
             break;
             case 4:
-                LoadImage(file_name, &FileH, &DIB, &Pixel);
+                loop = 0;
             break;
         }
     } 
