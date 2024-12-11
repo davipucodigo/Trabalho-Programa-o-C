@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h> 
 
 #pragma pack(1)
 
@@ -15,8 +17,8 @@ typedef struct {
 
 typedef struct{
     int32_t DIB_header_SIze; 
-    int32_t width; // Define a largura da imagem
-    int32_t height; // Define a altura da imagem
+    int32_t width;
+    int32_t height; 
     int16_t planes;
     int16_t bits_per_pixel;
     int32_t compression;
@@ -28,21 +30,21 @@ typedef struct{
 
 } DIBHeader;
 
-typedef struct {
-    int8_t b;
-    int8_t g;
-    int8_t r;
+typedef struct{
+    uint8_t b;
+    uint8_t g;
+    uint8_t r;
 } Cor;
 
 // ======================= Functions ======================= //
 
 void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
-    printf("\nCarregando Arquivo... '%s'\n", File);
+    printf("\nCarregando Arquivo... '%s' \n", File);
 
     FILE * fp;
     fp = fopen(File, "rb");
     if (fp == NULL) {
-        printf("Não foi possível ler o arquivo.");
+        printf("Não foi possível ler o arquivo.\n");
         return;
     }
 
@@ -50,65 +52,106 @@ void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     fread(D, sizeof(DIBHeader), 1, fp);
 
     printf("\n------------------------> FILE HEADER\n");
-    printf("Signature: %c%c\n", F->Signature[0], F->Signature[1]);
-    printf("FileSize: %d\n", F->FileSize);
-    printf("Reserved1: %d\n", F->Reserved1);
-    printf("Reserved2: %d\n", F->Reserved2);
-    printf("File Offset to Pixel Array: %d\n", F->File_Offset_to_PixelArray);
+    printf("Signature: %x%x\n", F->Signature[0], F->Signature[1]);
+    printf("FileSize: %x\n", F->FileSize);
+    printf("Reserved1: %x\n", F->Reserved1);
+    printf("Reserved2: %x\n", F->Reserved2);
+    printf("File Offset to Pixel Array: %x\n", F->File_Offset_to_PixelArray);
 
     printf("\n------------------------> DIB HEADER\n");
-    printf("DIB Header Size: %d\n", D->DIB_header_SIze);
-    printf("Width: %d\n", D->width);
-    printf("Height: %d\n", D->height);
-    printf("Planes: %d\n", D->planes);
-    printf("Bits per Pixel: %d\n", D->bits_per_pixel);
-    printf("Compression: %d\n", D->compression);
-    printf("Image Size: %d\n", D->image_size);
-    printf("X: %d\n", D->X);
-    printf("Y: %d\n", D->Y);
-    printf("Color Table: %d\n", D->color_table);
-    printf("Important Color Count: %d\n", D->important_color_coun);
+    printf("DIB Header Size: %x\n", D->DIB_header_SIze);
+    printf("Width: %x\n", D->width);
+    printf("Height: %x\n", D->height);
+    printf("Planes: %x\n", D->planes);
+    printf("Bits per Pixel: %x\n", D->bits_per_pixel);
+    printf("Compression: %x\n", D->compression);
+    printf("Image Size: %x\n", D->image_size);
+    printf("X: %x\n", D->X);
+    printf("Y: %x\n", D->Y);
+    printf("Color Table: %x\n", D->color_table);
+    printf("Important Color Count: %x\n", D->important_color_coun);
 
-    // Pular para a área de pixels
-    fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET);  
-
+    int padding = (4 - (D->width * 3) % 4) % 4;
+    fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET); // Pular para a área de pixels
     printf("\n------------------------> Pixels da Imagem\n");
-
     for (int y = 0; y < D->height; y++) {
         for (int x = 0; x < D->width; x++) {
-            Cor *pixel = P + y * D->width + x;
-            fread(pixel, sizeof(Cor), 1, fp);
+            fread(P, sizeof(Cor), 1, fp);
+            printf("Linha %d, Pixel %d: R(%02X) G(%02X) B(%02X)\n", y, x, P->r, P->g, P->b);
         }
+        fseek(fp, padding, SEEK_CUR);
     }
 
     printf("\nCarregamento Concluído.\n");
     fclose(fp);
 }
 
-void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {}
+void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
+    FILE * fp;
+    fp = fopen("out_image_color.bmp", "wb");
+    if (fp == NULL) {
+        printf("Não foi possível ler o arquivo.\n");
+        return;
+    }
+    
+    fwrite(F, sizeof(FileHeader), 1, fp);
+    fwrite(D, sizeof(DIBHeader), 1, fp);
+
+    int padding = (4 - (D->width * 3) % 4) % 4;
+    fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET); // Pular para a área de pixels
+    for (int y = 0; y < D->height; y++) {
+        for (int x = 0; x < D->width; x++) {
+            fwrite(P, sizeof(Cor), 1, fp);
+        }
+
+        for (int p = 0; p < padding; p++) {
+            fputc(0, fp); 
+        }
+    }
+
+    fclose(fp);
+}
 
 int main() {
-    int num_color;
-    // Structs Extends
+    // Structs
     FileHeader FileH;
     DIBHeader DIB;
-    Cor Pixel[1000 * 1000];  // Numero de pixels limite
+    Cor Pixel;
 
     // +++ Select File +++ //
-    char file_name[100];
+    char file_name[30];
     printf("\nDigite o nome do arquivo: ");
-    scanf("%[^\n]", file_name);
-    getchar(); // para ter o /0
+    scanf("%[^\n]",file_name);
+    getchar();
     fflush(stdin);
 
     // +++ Load Image +++ //
-    LoadImage(file_name, &FileH, &DIB, Pixel);
+    LoadImage(file_name, &FileH, &DIB, &Pixel);
 
-    // +++ Save Image +++ //
-    printf("\nDigite o Numero da cor Any R G B G (0 1 2 3 4): ");
-    scanf("%d", &num_color);
-    fflush(stdin);
-    SaveImage(&FileH, &DIB, Pixel, num_color);  // Exemplo de modificação para cor verde
+    // Decision
+    while (1) {
+        int op;
+        printf("\n1)Cor\n2)Corte\n3)Sair\nDigite a decisão: ");
+        scanf("%d",&op);
+        fflush(stdin);
+
+        switch (op) {
+            case 1: // SaveImage();
+                int cor;
+                printf("Cores 1->Vermelho 2->Verde 3->Azul 4->Cinza: ");
+                scanf("%d",&cor);
+                fflush(stdin);
+                SaveImage(&FileH, &DIB, &Pixel, cor);
+            break;
+            case 2: //CutImage();
+                // em breve.
+            break;
+            case 3:
+                break;
+                return 0;
+            break;
+        }
+    } 
 
     return 0;
 }
