@@ -194,8 +194,8 @@ void CutImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     int calculo_da_posição = (((D->width + original_padding) * cut_y) - cut_x);
     fseek(orig_fp, calculo_da_posição, SEEK_CUR);
 
-    for (int y = 0; y < cut_y; y++) {
-        for (int x = 0; x < cut_x; x++) {
+    for (int y = 0; y < A; y++) {
+        for (int x = 0; x < L; x++) {
             fread(P, sizeof(Cor), 1, orig_fp);
             fwrite(P, sizeof(Cor), 1, new_fp);
         }
@@ -204,8 +204,7 @@ void CutImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
             fputc(0, new_fp);
         }
 
-        fseek(orig_fp, original_padding, SEEK_CUR); // --> Desloca padding.
-        fseek(orig_fp, (D->width - cut_x) , SEEK_CUR);
+        fseek(orig_fp, (original_padding + (D->width - cut_x)), SEEK_CUR); // --> Desloca padding.
     }
 
     fclose(orig_fp);
