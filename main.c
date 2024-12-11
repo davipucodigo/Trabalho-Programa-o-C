@@ -86,7 +86,7 @@ void LoadImage(char *File, FileHeader *F, DIBHeader *D, Cor *P) {
     fclose(fp);
 }
 
-void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
+void SaveImage(char *File, FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
     FILE * fp;
     fp = fopen("out_image_color.bmp", "wb");
     if (fp == NULL) {
@@ -96,23 +96,57 @@ void SaveImage(FileHeader *F, DIBHeader *D, Cor *P, int out_color) {
     
     fwrite(F, sizeof(FileHeader), 1, fp);
     fwrite(D, sizeof(DIBHeader), 1, fp);
+    
+    // Lendo os pixels do original.
+    FILE *orig = fopen(File, "rb");
+    fseek(orig, F->File_Offset_to_PixelArray, SEEK_SET); 
 
-    int padding = (4 - (D->width * 3) % 4) % 4;
     fseek(fp, F->File_Offset_to_PixelArray, SEEK_SET); // Pular para a área de pixels
     for (int y = 0; y < D->height; y++) {
         for (int x = 0; x < D->width; x++) {
+            fread(P, sizeof(Cor), 1, orig);
+
+            switch (out_color) {
+                case 1:
+                    P->g = 0;
+                    P->b = 0;
+                    break;
+                case 2:
+                    P->r = 0;
+                    P->b = 0;
+                    break;
+                case 3:
+                    P->r = 0;
+                    P->g = 0;
+                    break;
+                case 4: // Cinza (média dos canais de cor)
+                    {
+                        uint8_t gray = (P->r + P->g + P->b) / 3;
+                        P->r = gray;
+                        P->g = gray;
+                        P->b = gray;
+                    }
+                    break;
+            }
+
             fwrite(P, sizeof(Cor), 1, fp);
         }
+        
 
+        int padding = (4 - (D->width * 3) % 4) % 4;
         for (int p = 0; p < padding; p++) {
             fputc(0, fp); 
         }
     }
 
+    fclose(orig);
     fclose(fp);
 }
 
 int main() {
+    //variables
+    int loop = 1;
+    
     // Structs
     FileHeader FileH;
     DIBHeader DIB;
@@ -129,7 +163,7 @@ int main() {
     LoadImage(file_name, &FileH, &DIB, &Pixel);
 
     // Decision
-    while (1) {
+    while (loop) {
         int op;
         printf("\n1)Cor\n2)Corte\n3)Sair\nDigite a decisão: ");
         scanf("%d",&op);
@@ -141,14 +175,13 @@ int main() {
                 printf("Cores 1->Vermelho 2->Verde 3->Azul 4->Cinza: ");
                 scanf("%d",&cor);
                 fflush(stdin);
-                SaveImage(&FileH, &DIB, &Pixel, cor);
+                SaveImage(file_name, &FileH, &DIB, &Pixel, cor);
             break;
             case 2: //CutImage();
                 // em breve.
             break;
             case 3:
-                break;
-                return 0;
+                loop = 0;
             break;
         }
     } 
